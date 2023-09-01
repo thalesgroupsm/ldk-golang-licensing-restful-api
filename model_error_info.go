@@ -5,7 +5,7 @@
  */
 
 
-package ldklicensingapi
+package ldklicensingretfulapi
 
 type ErrorInfo struct {
 	// The error code

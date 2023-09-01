@@ -4,7 +4,7 @@
  * This pages documents Sentinel LDK Runtime RESTful API Definition
  */
 
-package ldklicensingapi
+package ldklicensingretfulapi
 
 import (
 	"bytes"
@@ -14,17 +14,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"mime/multipart"
+	"net"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"golang.org/x/oauth2"
 )
@@ -52,7 +48,18 @@ type service struct {
 // optionally a custom http.Client to allow for advanced features such as caching.
 func NewAPIClient(cfg *Configuration) *APIClient {
 	if cfg.HTTPClient == nil {
-		cfg.HTTPClient = http.DefaultClient
+		//cfg.HTTPClient = http.DefaultClient
+		var netTransport = &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout: 50 * time.Second,
+			}).Dial,
+			TLSHandshakeTimeout: 5 * time.Second,
+		}
+		cfg.HTTPClient = &http.Client{
+			Timeout:   time.Second * 100,
+			Transport: netTransport,
+		}
+		//cfg.HTTPClient = &http.Client{Timeout: 30 * time.Second}
 	}
 
 	c := &APIClient{}
@@ -63,10 +70,6 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.LicenseApi = (*LicenseApiService)(&c.common)
 
 	return c
-}
-
-func atoi(in string) (int, error) {
-	return strconv.Atoi(in)
 }
 
 // selectHeaderContentType select a content type from the available list.
@@ -101,20 +104,6 @@ func contains(haystack []string, needle string) bool {
 		}
 	}
 	return false
-}
-
-// Verify optional parameters are of the correct type.
-func typeCheckParameter(obj interface{}, expected string, name string) error {
-	// Make sure there is an object.
-	if obj == nil {
-		return nil
-	}
-
-	// Check the type is as expected.
-	if reflect.TypeOf(obj).String() != expected {
-		return fmt.Errorf("Expected %s to be of type %s but received %s.", name, expected, reflect.TypeOf(obj).String())
-	}
-	return nil
 }
 
 // parameterToString convert interface{} parameters to string, using a delimiter if format is provided.
@@ -174,46 +163,6 @@ func (c *APIClient) prepareRequest(
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	// add form parameters and file if available.
-	if strings.HasPrefix(headerParams["Content-Type"], "multipart/form-data") && len(formParams) > 0 || (len(fileBytes) > 0 && fileName != "") {
-		if body != nil {
-			return nil, errors.New("Cannot specify postBody and multipart form at the same time.")
-		}
-		body = &bytes.Buffer{}
-		w := multipart.NewWriter(body)
-
-		for k, v := range formParams {
-			for _, iv := range v {
-				if strings.HasPrefix(k, "@") { // file
-					err = addFile(w, k[1:], iv)
-					if err != nil {
-						return nil, err
-					}
-				} else { // form value
-					w.WriteField(k, iv)
-				}
-			}
-		}
-		if len(fileBytes) > 0 && fileName != "" {
-			w.Boundary()
-			//_, fileNm := filepath.Split(fileName)
-			part, err := w.CreateFormFile("file", filepath.Base(fileName))
-			if err != nil {
-				return nil, err
-			}
-			_, err = part.Write(fileBytes)
-			if err != nil {
-				return nil, err
-			}
-			// Set the Boundary in the Content-Type
-			headerParams["Content-Type"] = w.FormDataContentType()
-		}
-
-		// Set Content-Length
-		headerParams["Content-Length"] = fmt.Sprintf("%d", body.Len())
-		w.Close()
 	}
 
 	if strings.HasPrefix(headerParams["Content-Type"], "application/x-www-form-urlencoded") && len(formParams) > 0 {
@@ -297,9 +246,12 @@ func (c *APIClient) prepareRequest(
 		}
 
 		// Identity Authentication
-		if auth, ok := ctx.Value(ContextIdentity).(string); ok {
-			auth := GenerateSignatureHeader(c.cfg.ClientIdentity, path, body.String())
-			localVarRequest.Header.Add("X-LDK-Identity-WS-V1", auth)
+		if auth, ok := ctx.Value(ContextIdentity).(IdentityAuth); ok {
+			var isp = &IdentitySignature{}
+			signature := isp.GenerateSignatureHeader(auth, path, body)
+			//localVarRequest.Header.Add("X-LDK-Identity-WS", signature)
+			//Allow obtaining original header capitalization
+			localVarRequest.Header["X-LDK-Identity-WS"] = []string{signature}
 		}
 	}
 
@@ -316,35 +268,13 @@ func (c *APIClient) decode(v interface{}, b []byte, contentType string) (err err
 			return err
 		}
 		return nil
-	} else if strings.Contains(contentType, "application/json") {
-		if err = json.Unmarshal(b, v); err != nil {
-			return err
-		}
-		return nil
 	}
-	return errors.New("undefined response type")
-}
 
-// Add a file to the multipart request
-func addFile(w *multipart.Writer, fieldName, path string) error {
-	file, err := os.Open(path)
-	if err != nil {
+	//by default, json format is used
+	if err = json.Unmarshal(b, v); err != nil {
 		return err
 	}
-	defer file.Close()
-
-	part, err := w.CreateFormFile(fieldName, filepath.Base(path))
-	if err != nil {
-		return err
-	}
-	_, err = io.Copy(part, file)
-
-	return err
-}
-
-// Prevent trying to import "fmt"
-func reportError(format string, a ...interface{}) error {
-	return fmt.Errorf(format, a...)
+	return nil
 }
 
 // Set request body from an interface{}
@@ -372,7 +302,7 @@ func setBody(body interface{}, contentType string) (bodyBuf *bytes.Buffer, err e
 	}
 
 	if bodyBuf.Len() == 0 {
-		err = fmt.Errorf("Invalid body type %s\n", contentType)
+		err = fmt.Errorf("invalid body type %s\n", contentType)
 		return nil, err
 	}
 	return bodyBuf, nil
@@ -446,10 +376,6 @@ func CacheExpires(r *http.Response) time.Time {
 		}
 	}
 	return expires
-}
-
-func strlen(s string) int {
-	return utf8.RuneCountInString(s)
 }
 
 // GenericSwaggerError Provides access to the body, error and model on returned errors.

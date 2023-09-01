@@ -4,7 +4,7 @@
  * This pages documents Sentinel LDK Runtime RESTful API Definition
  */
 
-package ldklicensingapi
+package ldklicensingretfulapi
 
 import (
 	"time"
@@ -26,11 +26,20 @@ type KeyInfo struct {
 	KeyModel           string    `json:"keyModel,omitempty"`
 	KeyType            string    `json:"keyType,omitempty"`
 	ProductionDateTime time.Time `json:"productionDateTime,omitempty"`
-	Recipient          string    `json:"recipient,omitempty"`
+	Recipient          bool      `json:"recipient,omitempty"`
 	Rehost             bool      `json:"rehost,omitempty"`
 	ResponseTime       string    `json:"responseTime,omitempty"`
 	Type_              string    `json:"type,omitempty"`
 	UpdateCounter      int32     `json:"updateCounter,omitempty"`
 	VclockEnabled      bool      `json:"vclockEnabled,omitempty"`
 	Version            string    `json:"version,omitempty"`
+}
+
+type KeysInfo struct {
+	Keyinfo []KeyInfo `json:"key,omitempty"`
+	Count   int32     `json:"count,omitempty"`
+}
+
+type Keys struct {
+	Keyinfo KeysInfo `json:"keys,omitempty"`
 }

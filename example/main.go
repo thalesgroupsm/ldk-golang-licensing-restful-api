@@ -1,38 +1,32 @@
-## Documentation for API Endpoints
+package main
 
-All URIs are relative to *https://localhost:8088/sentinel/ldk_runtime/v1*
+import (
+	"context"
+	"log"
+	"os"
+	"os/user"
+	"strconv"
+	"strings"
+	"time"
 
-Class | Method | HTTP request | Description
------------- | ------------- | ------------- | -------------
-*LicenseApi* | [**GetFeatureInfo**](docs/LicenseApi.md#getfeatureinfo) | **Get** /vendors/{vendorId}/features | getFeatureInfo
-*LicenseApi* | [**GetKeyInfo**](docs/LicenseApi.md#getkeyinfo) | **Get** /vendors/{vendorId}/keys | getKeyInfo
-*LicenseApi* | [**GetProductInfo**](docs/LicenseApi.md#getproductinfo) | **Get** /vendors/{vendorId}/products | getProductInfo
-*LicenseApi* | [**Login**](docs/LicenseApi.md#login) | **Post** /vendors/{vendorId}/sessions | login
-*LicenseApi* | [**Logout**](docs/LicenseApi.md#logout) | **Delete** /vendors/{vendorId}/sessions/{sessionId} | logout
-*LicenseApi* | [**Refresh**](docs/LicenseApi.md#refresh) | **Post** /vendors/{vendorId}/sessions/{sessionId}/refresh | refresh
+	"github.com/antihax/optional"
+	"github.com/denisbrodbeck/machineid"
+	"github.com/jessevdk/go-flags"
+	"github.com/joho/godotenv"
+	api "github.com/thalesgroupsm/ldk-golang-licensing-restful-api"
+)
 
+type EnvCfg struct {
+	VendorId       string `env:"SNTL_VENDOR_ID"         description:"Vendor Id"        long:"vendor-id"`
+	ClientIdentity string `env:"SNTL_CLIENT_IDENTITY"   description:"Client Identity"  long:"client-identity"`
+	EndpointScheme string `env:"SNTL_ENDPOINT_SCHEME"   description:"Endpoint Scheme"  long:"endpoint-scheme"`
+	ServerAddr     string `env:"SNTL_SERVER_ADDR"   description:"Server Address"  long:"servver-address"`
+	ServerPort     string `env:"SNTL_SERVER_PORT"   description:"Server Port"  long:"server-port"`
+}
 
-## Documentation For Models
+var env EnvCfg
 
- - [ClientInfo](docs/ClientInfo.md)
- - [Concurrency](docs/Concurrency.md)
- - [ErrorInfo](docs/ErrorInfo.md)
- - [FeatureInfo](docs/FeatureInfo.md)
- - [KeyInfo](docs/KeyInfo.md)
- - [LicenseInfo](docs/LicenseInfo.md)
- - [LicenseRequest](docs/LicenseRequest.md)
- - [LicenseResponse](docs/LicenseResponse.md)
- - [ProductInfo](docs/ProductInfo.md)
- - [Scope](docs/Scope.md)
- - [SessionInfo](docs/SessionInfo.md)
-
-
-## Documentation For Authorization
- Endpoints do not require authorization.
-
-
-## Documentation For Sample
-
+func main() {
 
 	// parse & validate environment variables
 	godotenv.Load()
@@ -119,4 +113,4 @@ Class | Method | HTTP request | Description
 		return
 	}
 	log.Println("licensingApi.LicenseApi.Logout", apiResponse.SessionId)
-
+}

@@ -4,7 +4,7 @@
  * This pages documents Sentinel LDK Runtime RESTful API Definition
  */
 
-package ldklicensingapi
+package ldklicensingretfulapi
 
 import (
 	"net/http"

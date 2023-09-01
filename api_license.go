@@ -4,7 +4,7 @@
  * This pages documents Sentinel LDK Runtime RESTful API Definition
  */
 
-package ldklicensingapi
+package ldklicensingretfulapi
 
 import (
 	"context"
@@ -26,11 +26,11 @@ type LicenseApiService service
 
 /*
 LicenseApiService getFeatureInfo
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param vendorId vendor Id
- * @param optional nil or *LicenseApiGetFeatureInfoOpts - Optional Parameters:
-     * @param "PageStartIndex" (optional.Int32) -  page start index
-     * @param "PageSize" (optional.Int32) -  page size
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param vendorId vendor Id
+  - @param optional nil or *LicenseApiGetFeatureInfoOpts - Optional Parameters:
+  - @param "PageStartIndex" (optional.Int32) -  page start index
+  - @param "PageSize" (optional.Int32) -  page size
 
 @return []FeatureInfo
 */
@@ -39,13 +39,13 @@ type QueryInfoOpts struct {
 	PageSize       optional.Int32
 }
 
-func (a *LicenseApiService) GetFeatureInfo(ctx context.Context, localVarOptionals *QueryInfoOpts) ([]FeatureInfo, *http.Response, error) {
+func (a *LicenseApiService) GetFeatureInfo(ctx context.Context, localVarOptionals *QueryInfoOpts) (Features, *http.Response, error) {
 	var (
 		localVarHttpMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
-		localVarReturnValue []FeatureInfo
+		localVarReturnValue Features
 	)
 
 	// create path and map variables
@@ -160,21 +160,21 @@ func (a *LicenseApiService) GetFeatureInfo(ctx context.Context, localVarOptional
 
 /*
 LicenseApiService getKeyInfo
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param vendorId vendor Id
- * @param optional nil or *LicenseApiGetKeyInfoOpts - Optional Parameters:
-     * @param "PageStartIndex" (optional.Int32) -  page start index
-     * @param "PageSize" (optional.Int32) -  page size
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param vendorId vendor Id
+  - @param optional nil or *LicenseApiGetKeyInfoOpts - Optional Parameters:
+  - @param "PageStartIndex" (optional.Int32) -  page start index
+  - @param "PageSize" (optional.Int32) -  page size
 
 @return []KeyInfo
 */
-func (a *LicenseApiService) GetKeyInfo(ctx context.Context, localVarOptionals *QueryInfoOpts) ([]KeyInfo, *http.Response, error) {
+func (a *LicenseApiService) GetKeyInfo(ctx context.Context, localVarOptionals *QueryInfoOpts) (Keys, *http.Response, error) {
 	var (
 		localVarHttpMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
-		localVarReturnValue []KeyInfo
+		localVarReturnValue Keys
 	)
 
 	// create path and map variables
@@ -289,21 +289,21 @@ func (a *LicenseApiService) GetKeyInfo(ctx context.Context, localVarOptionals *Q
 
 /*
 LicenseApiService getProductInfo
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param vendorId vendor Id
- * @param optional nil or *LicenseApiGetProductInfoOpts - Optional Parameters:
-     * @param "PageStartIndex" (optional.Int32) -  page start index
-     * @param "PageSize" (optional.Int32) -  page size
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param vendorId vendor Id
+  - @param optional nil or *LicenseApiGetProductInfoOpts - Optional Parameters:
+  - @param "PageStartIndex" (optional.Int32) -  page start index
+  - @param "PageSize" (optional.Int32) -  page size
 
 @return []ProductInfo
 */
-func (a *LicenseApiService) GetProductInfo(ctx context.Context, localVarOptionals *QueryInfoOpts) ([]ProductInfo, *http.Response, error) {
+func (a *LicenseApiService) GetProductInfo(ctx context.Context, localVarOptionals *QueryInfoOpts) (Products, *http.Response, error) {
 	var (
 		localVarHttpMethod  = strings.ToUpper("Get")
 		localVarPostBody    interface{}
 		localVarFileName    string
 		localVarFileBytes   []byte
-		localVarReturnValue []ProductInfo
+		localVarReturnValue Products
 	)
 
 	// create path and map variables
@@ -418,14 +418,13 @@ func (a *LicenseApiService) GetProductInfo(ctx context.Context, localVarOptional
 
 /*
 LicenseApiService login
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param xLDKIdentityWS XXXXXXXXXXXXXXXXXX
- * @param licenseRequest licenseRequest
- * @param vendorId vendorId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param licenseRequest licenseRequest
+  - @param vendorId vendorId
 
 @return LicenseResponse
 */
-func (a *LicenseApiService) Login(ctx context.Context, xLDKIdentityWS string, licenseRequest LicenseRequest) (LicenseResponse, *http.Response, error) {
+func (a *LicenseApiService) Login(ctx context.Context, licenseRequest LicenseRequest) (LicenseResponse, *http.Response, error) {
 	var (
 		localVarHttpMethod  = strings.ToUpper("Post")
 		localVarPostBody    interface{}
@@ -460,7 +459,6 @@ func (a *LicenseApiService) Login(ctx context.Context, xLDKIdentityWS string, li
 		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
 	}
 
-	localVarHeaderParams["X-LDK-Identity-WS"] = parameterToString(xLDKIdentityWS, "")
 	// body params
 	localVarPostBody = &licenseRequest
 	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
@@ -646,9 +644,10 @@ func (a *LicenseApiService) Logout(ctx context.Context, sessionId string) (*http
 
 /*
 LicenseApiService refresh
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param sessionId sessionId
- * @param vendorId vendorId
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param sessionId sessionId
+  - @param vendorId vendorId
+
 @return LicenseResponse
 */
 func (a *LicenseApiService) Refresh(ctx context.Context, sessionId string) (LicenseResponse, *http.Response, error) {

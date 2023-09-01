@@ -5,7 +5,7 @@
  */
 
 
-package ldklicensingapi
+package ldklicensingretfulapi
 
 type Scope struct {
 	KeyId []int32 `json:"keyId,omitempty"`

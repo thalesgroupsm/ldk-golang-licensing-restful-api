@@ -4,7 +4,7 @@
  * This pages documents Sentinel LDK Runtime RESTful API Definition
  */
 
-package ldklicensingapi
+package ldklicensingretfulapi
 
 import (
 	"net/http"
@@ -34,13 +34,18 @@ var (
 	ContextAPIKey = contextKey("apikey")
 
 	// ContextAPIKey takes an identity as authentication for the request
-	ContextIdentity = contextKey("identity")
+	ContextIdentity = contextKey("clientidentity")
 )
 
 // BasicAuth provides basic http authentication to a request passed via context using ContextBasicAuth
 type BasicAuth struct {
 	UserName string `json:"userName,omitempty"`
 	Password string `json:"password,omitempty"`
+}
+
+type IdentityAuth struct {
+	Id     string `json:"id,omitempty"`
+	Secret string `json:"secret,omitempty"`
 }
 
 // APIKey provides API key based authentication to a request passed via context using ContextAPIKey
@@ -50,19 +55,18 @@ type APIKey struct {
 }
 
 type Configuration struct {
-	BasePath       string            `json:"basePath,omitempty"`
-	Host           string            `json:"host,omitempty"`
-	Scheme         string            `json:"scheme,omitempty"`
-	DefaultHeader  map[string]string `json:"defaultHeader,omitempty"`
-	UserAgent      string            `json:"userAgent,omitempty"`
-	HTTPClient     *http.Client
-	VendorId       string         `json:"vendorId,omitempty"`
-	ClientIdentity ClientIdentity `json:"clientIdentity,omitempty"`
+	BasePath      string            `json:"basePath,omitempty"`
+	Host          string            `json:"host,omitempty"`
+	Scheme        string            `json:"scheme,omitempty"`
+	DefaultHeader map[string]string `json:"defaultHeader,omitempty"`
+	UserAgent     string            `json:"userAgent,omitempty"`
+	HTTPClient    *http.Client
+	VendorId      string `json:"vendorId,omitempty"`
 }
 
 func NewConfiguration() *Configuration {
 	cfg := &Configuration{
-		BasePath:      "https://localhost:1947/sentinel/ldk_runtime/v1",
+		BasePath:      "/sentinel/ldk_runtime/v1",
 		DefaultHeader: make(map[string]string),
 	}
 	cfg.VendorId = "37515"
