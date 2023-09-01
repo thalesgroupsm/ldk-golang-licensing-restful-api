@@ -4,35 +4,67 @@ All URIs are relative to *https://localhost:8088/sentinel/ldk_runtime/v1*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*LicenseApi* | [**GetFeatureInfo**](docs/LicenseApi.md#getfeatureinfo) | **Get** /vendors/{vendorId}/features | getFeatureInfo
-*LicenseApi* | [**GetKeyInfo**](docs/LicenseApi.md#getkeyinfo) | **Get** /vendors/{vendorId}/keys | getKeyInfo
-*LicenseApi* | [**GetProductInfo**](docs/LicenseApi.md#getproductinfo) | **Get** /vendors/{vendorId}/products | getProductInfo
-*LicenseApi* | [**Login**](docs/LicenseApi.md#login) | **Post** /vendors/{vendorId}/sessions | login
-*LicenseApi* | [**Logout**](docs/LicenseApi.md#logout) | **Delete** /vendors/{vendorId}/sessions/{sessionId} | logout
-*LicenseApi* | [**Refresh**](docs/LicenseApi.md#refresh) | **Post** /vendors/{vendorId}/sessions/{sessionId}/refresh | refresh
-
-
-## Documentation For Models
-
- - [ClientInfo](docs/ClientInfo.md)
- - [Concurrency](docs/Concurrency.md)
- - [ErrorInfo](docs/ErrorInfo.md)
- - [FeatureInfo](docs/FeatureInfo.md)
- - [KeyInfo](docs/KeyInfo.md)
- - [LicenseInfo](docs/LicenseInfo.md)
- - [LicenseRequest](docs/LicenseRequest.md)
- - [LicenseResponse](docs/LicenseResponse.md)
- - [ProductInfo](docs/ProductInfo.md)
- - [Scope](docs/Scope.md)
- - [SessionInfo](docs/SessionInfo.md)
+*LicenseApi* | [**GetFeatureInfo**] | **Get** /vendors/{vendorId}/features | getFeatureInfo
+*LicenseApi* | [**GetKeyInfo**] | **Get** /vendors/{vendorId}/keys | getKeyInfo
+*LicenseApi* | [**GetProductInfo**] | **Get** /vendors/{vendorId}/products | getProductInfo
+*LicenseApi* | [**Login**] | **Post** /vendors/{vendorId}/sessions | login
+*LicenseApi* | [**Logout**] | **Delete** /vendors/{vendorId}/sessions/{sessionId} | logout
+*LicenseApi* | [**Refresh**] | **Post** /vendors/{vendorId}/sessions/{sessionId}/refresh | refresh
 
 
 ## Documentation For Authorization
- Endpoints do not require authorization.
+Whether this header is required depends on the 'Allow Access from Remote Clients' value in the license manager server. In Sentinel Admin Control Center, this value can be found under Configuration > Access from Remote Clients.
 
+When applying a web service signature, the expected header is similar to the following:
 
+X-LDK-Identity-WS: V1, Identity=KZMSEU3, RequestDate=2015-08-30T12:36:00Z, Signature=98cd2651598ac9460e8a336912d8bf683c4690d6043ca8a51680143cde080f3c
+
+where
+
+V1 is a fixed string defining the version
+Identity defines the identity code
+RequestDate is formatted as YYYY-MM-DDTHH:MM:SSZ (20 characters)
+The signature is computed as follows:
+
+IdentitySecret = 16 bytes secret from the identity
+DerivedKey = HMAC-SHA256(IdentitySecret, "X-LDK-Identity-WS-V1") (32 bytes)
+Signature = HMAC-SHA256 (DerivedKey, Identity + RequestDate + Url + "^" + Body) (32 bytes)
+where
+
+Identity and RequestDate are the exact bytes that are passed in the X-LDK-Identity-WS header
+Url example: "/sentinel/ldk_runtime/v1/vendors/37515/keys"
+"^" ensures that Url and Body are clearly separated. Both Url and Body are invalidated if the cutoff is moved.
 ## Documentation For Sample
 
+package main
+
+import (
+	"context"
+	"log"
+	"os"
+	"os/user"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/antihax/optional"
+	"github.com/denisbrodbeck/machineid"
+	"github.com/jessevdk/go-flags"
+	"github.com/joho/godotenv"
+	api "github.com/thalesgroupsm/ldk-golang-licensing-restful-api"
+)
+
+type EnvCfg struct {
+	VendorId       string `env:"SNTL_VENDOR_ID"         description:"Vendor Id"        long:"vendor-id"`
+	ClientIdentity string `env:"SNTL_CLIENT_IDENTITY"   description:"Client Identity"  long:"client-identity"`
+	EndpointScheme string `env:"SNTL_ENDPOINT_SCHEME"   description:"Endpoint Scheme"  long:"endpoint-scheme"`
+	ServerAddr     string `env:"SNTL_SERVER_ADDR"   description:"Server Address"  long:"servver-address"`
+	ServerPort     string `env:"SNTL_SERVER_PORT"   description:"Server Port"  long:"server-port"`
+}
+
+var env EnvCfg
+
+func main() {
 
 	// parse & validate environment variables
 	godotenv.Load()
@@ -119,4 +151,4 @@ Class | Method | HTTP request | Description
 		return
 	}
 	log.Println("licensingApi.LicenseApi.Logout", apiResponse.SessionId)
-
+}
