@@ -1,4 +1,4 @@
-## Documentation for API Endpoints
+## API Endpoints
 
 All URIs are relative to *https://localhost:8088/sentinel/ldk_runtime/v1*
 
@@ -12,7 +12,7 @@ Class | Method | HTTP request | Description
 *LicenseApi* | [**Refresh**] | **Post** /vendors/{vendorId}/sessions/{sessionId}/refresh | refresh
 
 
-## Documentation For Authorization
+## Authorization
 Whether this header is required depends on the 'Allow Access from Remote Clients' value in the license manager server. In Sentinel Admin Control Center, this value can be found under Configuration > Access from Remote Clients.
 
 When applying a web service signature, the expected header is similar to the following:
@@ -34,7 +34,7 @@ where
 Identity and RequestDate are the exact bytes that are passed in the X-LDK-Identity-WS header
 Url example: "/sentinel/ldk_runtime/v1/vendors/37515/keys"
 "^" ensures that Url and Body are clearly separated. Both Url and Body are invalidated if the cutoff is moved.
-## Documentation For Sample
+## Sample
 
 package main
 
@@ -54,17 +54,17 @@ import (
 	api "github.com/thalesgroupsm/ldk-golang-licensing-restful-api"
 )
 
-type EnvCfg struct {
-	VendorId       string `env:"SNTL_VENDOR_ID"         description:"Vendor Id"        long:"vendor-id"`
-	ClientIdentity string `env:"SNTL_CLIENT_IDENTITY"   description:"Client Identity"  long:"client-identity"`
-	EndpointScheme string `env:"SNTL_ENDPOINT_SCHEME"   description:"Endpoint Scheme"  long:"endpoint-scheme"`
-	ServerAddr     string `env:"SNTL_SERVER_ADDR"   description:"Server Address"  long:"servver-address"`
-	ServerPort     string `env:"SNTL_SERVER_PORT"   description:"Server Port"  long:"server-port"`
-}
-
-var env EnvCfg
-
 func main() {
+
+   type EnvCfg struct {
+	   VendorId       string `env:"SNTL_VENDOR_ID"         description:"Vendor Id"        long:"vendor-id"`
+	   ClientIdentity string `env:"SNTL_CLIENT_IDENTITY"   description:"Client Identity"  long:"client-identity"`
+	   EndpointScheme string `env:"SNTL_ENDPOINT_SCHEME"   description:"Endpoint Scheme"  long:"endpoint-scheme"`
+	   ServerAddr     string `env:"SNTL_SERVER_ADDR"   description:"Server Address"  long:"servver-address"`
+	   ServerPort     string `env:"SNTL_SERVER_PORT"   description:"Server Port"  long:"server-port"`
+   }
+
+   var env EnvCfg
 
 	// parse & validate environment variables
 	godotenv.Load()
