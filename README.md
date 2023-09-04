@@ -35,7 +35,7 @@ Identity and RequestDate are the exact bytes that are passed in the X-LDK-Identi
 Url example: "/sentinel/ldk_runtime/v1/vendors/37515/keys"
 "^" ensures that Url and Body are clearly separated. Both Url and Body are invalidated if the cutoff is moved.
 ## Sample
-
+```
 package main
 
 import (
@@ -54,17 +54,17 @@ import (
 	api "github.com/thalesgroupsm/ldk-golang-licensing-restful-api"
 )
 
+type EnvCfg struct {
+   VendorId       string `env:"SNTL_VENDOR_ID"         description:"Vendor Id"        long:"vendor-id"`
+   ClientIdentity string `env:"SNTL_CLIENT_IDENTITY"   description:"Client Identity"  long:"client-identity"`
+   EndpointScheme string `env:"SNTL_ENDPOINT_SCHEME"   description:"Endpoint Scheme"  long:"endpoint-scheme"`
+   ServerAddr     string `env:"SNTL_SERVER_ADDR"   description:"Server Address"  long:"servver-address"`
+   ServerPort     string `env:"SNTL_SERVER_PORT"   description:"Server Port"  long:"server-port"`
+}
+
+var env EnvCfg
+
 func main() {
-
-   type EnvCfg struct {
-	   VendorId       string `env:"SNTL_VENDOR_ID"         description:"Vendor Id"        long:"vendor-id"`
-	   ClientIdentity string `env:"SNTL_CLIENT_IDENTITY"   description:"Client Identity"  long:"client-identity"`
-	   EndpointScheme string `env:"SNTL_ENDPOINT_SCHEME"   description:"Endpoint Scheme"  long:"endpoint-scheme"`
-	   ServerAddr     string `env:"SNTL_SERVER_ADDR"   description:"Server Address"  long:"servver-address"`
-	   ServerPort     string `env:"SNTL_SERVER_PORT"   description:"Server Port"  long:"server-port"`
-   }
-
-   var env EnvCfg
 
 	// parse & validate environment variables
 	godotenv.Load()
@@ -152,3 +152,4 @@ func main() {
 	}
 	log.Println("licensingApi.LicenseApi.Logout", apiResponse.SessionId)
 }
+```
