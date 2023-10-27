@@ -47,19 +47,30 @@ type service struct {
 // NewAPIClient creates a new API client. Requires a userAgent string describing your application.
 // optionally a custom http.Client to allow for advanced features such as caching.
 func NewAPIClient(cfg *Configuration) *APIClient {
+	var netTransport http.Transport
 	if cfg.HTTPClient == nil {
-		//cfg.HTTPClient = http.DefaultClient
-		var netTransport = &http.Transport{
-			Dial: (&net.Dialer{
-				Timeout: 50 * time.Second,
-			}).Dial,
-			TLSHandshakeTimeout: 5 * time.Second,
+
+		if cfg.Proxy == "" {
+			netTransport = http.Transport{
+				Dial: (&net.Dialer{
+					Timeout: 50 * time.Second,
+				}).Dial,
+				TLSHandshakeTimeout: 5 * time.Second,
+			}
+		} else {
+			proxyURL, _ := url.Parse(cfg.Proxy)
+			netTransport = http.Transport{
+				Proxy: http.ProxyURL(proxyURL),
+				Dial: (&net.Dialer{
+					Timeout: 50 * time.Second,
+				}).Dial,
+				TLSHandshakeTimeout: 5 * time.Second,
+			}
 		}
 		cfg.HTTPClient = &http.Client{
 			Timeout:   time.Second * 100,
-			Transport: netTransport,
+			Transport: &netTransport,
 		}
-		//cfg.HTTPClient = &http.Client{Timeout: 30 * time.Second}
 	}
 
 	c := &APIClient{}
@@ -249,9 +260,10 @@ func (c *APIClient) prepareRequest(
 		if auth, ok := ctx.Value(ContextIdentity).(IdentityAuth); ok {
 			var isp = &IdentitySignature{}
 			signature := isp.GenerateSignatureHeader(auth, path, body)
-			//localVarRequest.Header.Add("X-LDK-Identity-WS", signature)
 			//Allow obtaining original header capitalization
-			localVarRequest.Header["X-LDK-Identity-WS"] = []string{signature}
+			localVarRequest.Header.Add("X-LDK-Identity-WS", signature)
+			// Add the sticker id to the request.
+			localVarRequest.Header.Add("X-LDK-Instance", c.cfg.StickerId)
 		}
 	}
 

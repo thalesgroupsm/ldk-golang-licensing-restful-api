@@ -22,6 +22,7 @@ type EnvCfg struct {
 	EndpointScheme string `env:"SNTL_ENDPOINT_SCHEME"   description:"Endpoint Scheme"  long:"endpoint-scheme"`
 	ServerAddr     string `env:"SNTL_SERVER_ADDR"   description:"Server Address"  long:"servver-address"`
 	ServerPort     string `env:"SNTL_SERVER_PORT"   description:"Server Port"  long:"server-port"`
+	Proxy          string `env:"SNTL_PROXY"   description:"Proxy"  long:"proxy"`
 }
 
 var env EnvCfg
@@ -49,6 +50,7 @@ func main() {
 		VendorId: env.VendorId,
 		Scheme:   env.EndpointScheme,
 		BasePath: env.EndpointScheme + "://" + env.ServerAddr + ":" + env.ServerPort + "/sentinel/ldk_runtime/v1",
+		Proxy:    env.Proxy,
 	}
 
 	licensingApiClient := api.NewAPIClient(cfg)
@@ -64,12 +66,14 @@ func main() {
 	licenseRequest.ClientInfo = &api.ClientInfo{}
 	licenseRequest.ClientInfo.MachineId, _ = machineid.ID()
 	licenseRequest.ClientInfo.UserName = user.Username
-	licenseRequest.ClientInfo.DomainName, _ = os.Hostname()
+	licenseRequest.ClientInfo.HostName, _ = os.Hostname()
+	licenseRequest.ClientInfo.DomainName = "test"
 	licenseRequest.ClientInfo.ProcessId = strconv.Itoa(os.Getpid())
 	licenseRequest.ClientInfo.ClientDateTime = time.Now().UTC().Format(time.RFC3339)
 
 	apiResponse, _, err := licensingApiClient.LicenseApi.Login(authCtx, licenseRequest)
 	if err != nil {
+		log.Printf("error %#v", apiResponse)
 		log.Fatal(err)
 		return
 	}

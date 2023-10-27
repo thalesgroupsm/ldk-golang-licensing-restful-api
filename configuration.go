@@ -8,6 +8,8 @@ package ldklicensingretfulapi
 
 import (
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 // contextKeys are used to identify the type of value in the context.
@@ -62,6 +64,8 @@ type Configuration struct {
 	UserAgent     string            `json:"userAgent,omitempty"`
 	HTTPClient    *http.Client
 	VendorId      string `json:"vendorId,omitempty"`
+	Proxy         string `json:"proxy,omitempty"`
+	StickerId     string `json:"stickerId,omitempty"`
 }
 
 func NewConfiguration() *Configuration {
@@ -70,6 +74,9 @@ func NewConfiguration() *Configuration {
 		DefaultHeader: make(map[string]string),
 	}
 	cfg.VendorId = "37515"
+	id := uuid.New()
+
+	cfg.StickerId = id.String()
 	return cfg
 }
 
