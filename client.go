@@ -56,6 +56,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 					Timeout: 50 * time.Second,
 				}).Dial,
 				TLSHandshakeTimeout: 5 * time.Second,
+				IdleConnTimeout:     20 * time.Second,
 			}
 		} else {
 			proxyURL, _ := url.Parse(cfg.Proxy)
@@ -65,6 +66,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 					Timeout: 50 * time.Second,
 				}).Dial,
 				TLSHandshakeTimeout: 5 * time.Second,
+				IdleConnTimeout:     20 * time.Second,
 			}
 		}
 		cfg.HTTPClient = &http.Client{
