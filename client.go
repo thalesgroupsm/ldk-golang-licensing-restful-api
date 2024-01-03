@@ -55,7 +55,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 				Dial: (&net.Dialer{
 					Timeout: 50 * time.Second,
 				}).Dial,
-				TLSHandshakeTimeout: 5 * time.Second,
+				TLSHandshakeTimeout: 20 * time.Second,
 				IdleConnTimeout:     20 * time.Second,
 			}
 		} else {
@@ -65,7 +65,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 				Dial: (&net.Dialer{
 					Timeout: 50 * time.Second,
 				}).Dial,
-				TLSHandshakeTimeout: 5 * time.Second,
+				TLSHandshakeTimeout: 20 * time.Second,
 				IdleConnTimeout:     20 * time.Second,
 			}
 		}
