@@ -17,12 +17,15 @@ import (
 )
 
 type EnvCfg struct {
-	VendorId       string `env:"SNTL_VENDOR_ID"         description:"Vendor Id"        long:"vendor-id"`
-	ClientIdentity string `env:"SNTL_CLIENT_IDENTITY"   description:"Client Identity"  long:"client-identity"`
-	EndpointScheme string `env:"SNTL_ENDPOINT_SCHEME"   description:"Endpoint Scheme"  long:"endpoint-scheme"`
-	ServerAddr     string `env:"SNTL_SERVER_ADDR"   description:"Server Address"  long:"servver-address"`
-	ServerPort     string `env:"SNTL_SERVER_PORT"   description:"Server Port"  long:"server-port"`
-	Proxy          string `env:"SNTL_PROXY"   description:"Proxy"  long:"proxy"`
+	VendorId        string `env:"SNTL_VENDOR_ID"         description:"Vendor Id"        long:"vendor-id"`
+	ClientIdentity  string `env:"SNTL_CLIENT_IDENTITY"   description:"Client Identity"  long:"client-identity"`
+	EndpointScheme  string `env:"SNTL_ENDPOINT_SCHEME"   description:"Endpoint Scheme"  long:"endpoint-scheme"`
+	ServerAddr      string `env:"SNTL_SERVER_ADDR"   description:"Server Address"  long:"servver-address"`
+	ServerPort      string `env:"SNTL_SERVER_PORT"   description:"Server Port"  long:"server-port"`
+	Proxy           string `env:"SNTL_PROXY"   description:"Proxy"  long:"proxy"`
+	AccessToken     string `env:"SNTL_ACCESS_TOKEN"   description:"Access Token"  long:"access-token"`
+	AccessTokenType int    `env:"SNTL_ACCESS_TOKEN_TYPE"   description:"Access Token Type"  long:"access-token-type"`
+	UserId          string `env:"SNTL_USER_ID"   description:"User ID"  long:"user-id"`
 }
 
 var env EnvCfg
@@ -33,17 +36,25 @@ func main() {
 	godotenv.Load()
 	flags.Parse(&env)
 
-	// parse the client identity
-	clientIdResult := strings.Split(env.ClientIdentity, ":")
-	if clientIdResult == nil || len(clientIdResult) != 2 {
-		log.Fatal("Client Identity is not valid")
-		return
+	var authCtx context.Context
+	if env.AccessToken == "" {
+		// parse the client identity
+		clientIdResult := strings.Split(env.ClientIdentity, ":")
+		if clientIdResult == nil || len(clientIdResult) != 2 {
+			log.Fatal("Client Identity is not valid")
+			return
+		}
+		authCtx = context.WithValue(context.Background(), api.ContextIdentity, api.IdentityAuth{
+			Id:     clientIdResult[0],
+			Secret: clientIdResult[1],
+		})
+	} else {
+		authCtx = context.WithValue(context.Background(), api.ContextAccessToken, api.AccessTokenAuth{
+			UserId:          env.UserId,
+			AccessToken:     env.AccessToken,
+			AccessTokenType: env.AccessTokenType,
+		})
 	}
-
-	authCtx := context.WithValue(context.Background(), api.ContextIdentity, api.IdentityAuth{
-		Id:     clientIdResult[0],
-		Secret: clientIdResult[1],
-	})
 
 	cfg := &api.Configuration{
 		Host:     env.ServerAddr,
@@ -78,6 +89,15 @@ func main() {
 		return
 	}
 	log.Printf("licensingApi.LicenseApi.Login %#v", apiResponse)
+	
+	if env.AccessToken != "" {
+		//use LAT access token after login success
+		authCtx = context.WithValue(context.Background(), api.ContextAccessToken, api.AccessTokenAuth{
+			UserId:          "",
+			AccessToken:     apiResponse.LmAccessToken,
+			AccessTokenType: 1,
+		})
+	}
 
 	localVarOptionals := &api.QueryInfoOpts{
 		PageStartIndex: optional.NewInt32(0),
