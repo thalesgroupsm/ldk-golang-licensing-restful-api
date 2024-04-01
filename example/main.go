@@ -29,7 +29,7 @@ type EnvCfg struct {
 	ClientSecret   string `env:"SNTL_CLIENT_SECRET"   description:"Client Secret"  long:"client-secret"`
 	AccessTokenUrl string `env:"SNTL_ACCESS_TOKEN_URL"   description:"Access Token Url"  long:"access-token-url"`
 	UserId         string `env:"SNTL_USER_ID"   description:"User ID"  long:"user-id"`
-	AuthType       int    `env:"SNTL_AUTH_TYPE"   description:"Auth Type"  long:"auth-type"`
+	AuthType       string `env:"SNTL_AUTH_TYPE"   description:"Auth Type"  long:"auth-type"`
 }
 
 var env EnvCfg
@@ -70,7 +70,7 @@ func main() {
 	flags.Parse(&env)
 
 	var authCtx context.Context
-	if env.AuthType == 0 {
+	if env.AuthType == "identity" {
 		// use client identity
 		clientIdResult := strings.Split(env.ClientIdentity, ":")
 		if clientIdResult == nil || len(clientIdResult) != 2 {
@@ -81,12 +81,14 @@ func main() {
 			Id:     clientIdResult[0],
 			Secret: clientIdResult[1],
 		})
-	} else {
+	} else if env.AuthType == "accesstoken" {
 		// use access token
 		authCtx = context.WithValue(context.Background(), api.ContextAccessToken, api.AccessTokenAuth{
 			UserId:      env.UserId,
 			AccessToken: getAccessToken(),
 		})
+	} else {
+		log.Fatal("Invalid auth type!")
 	}
 
 	cfg := &api.Configuration{
