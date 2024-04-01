@@ -36,6 +36,7 @@ Url example: "/sentinel/ldk_runtime/v1/vendors/37515/keys"
 "^" ensures that Url and Body are clearly separated. Both Url and Body are invalidated if the cutoff is moved.
 ### Use JWT access token
 X-LDK-User-Id: user id for authorization. The header should be set when using Credentials access token.
+
 Authorization:  Credentials or Public access token from authorization server.
 
 ## Sample
