@@ -56,11 +56,10 @@ type APIKey struct {
 	Prefix string
 }
 
-// Access token supports ABL 
+// Access token supports ABL
 type AccessTokenAuth struct {
-	UserId          string `json:"uid,omitempty"`
-	AccessToken     string `json:"accessToken,omitempty"`
-	AccessTokenType int    `json:"accessTokenType,omitempty"` // IDP:0, LAT:1
+	UserId      string `json:"uid,omitempty"`
+	AccessToken string `json:"accessToken,omitempty"`
 }
 
 type Configuration struct {
