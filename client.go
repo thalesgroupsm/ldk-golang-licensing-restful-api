@@ -254,8 +254,9 @@ func (c *APIClient) prepareRequest(
 		}
 
 		// AccessToken Authentication
-		if auth, ok := ctx.Value(ContextAccessToken).(string); ok {
-			localVarRequest.Header.Add("Authorization", "Bearer "+auth)
+		if auth, ok := ctx.Value(ContextAccessToken).(AccessTokenAuth); ok {
+			localVarRequest.Header.Add("X-LDK-User-Id", auth.UserId)
+			localVarRequest.Header.Add("Authorization", "Bearer "+auth.AccessToken)
 		}
 
 		// Identity Authentication

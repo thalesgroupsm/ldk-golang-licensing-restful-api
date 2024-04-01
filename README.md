@@ -16,7 +16,7 @@ Class | Method | HTTP request | Description
 Whether this header is required depends on the 'Allow Access from Remote Clients' value in the license manager server. In Sentinel Admin Control Center, this value can be found under Configuration > Access from Remote Clients.
 
 When applying a web service signature, the expected header is similar to the following:
-
+### Use identity
 X-LDK-Identity-WS: V1, Identity=KZMSEU3, RequestDate=2015-08-30T12:36:00Z, Signature=98cd2651598ac9460e8a336912d8bf683c4690d6043ca8a51680143cde080f3c
 
 where
@@ -34,12 +34,18 @@ where
 Identity and RequestDate are the exact bytes that are passed in the X-LDK-Identity-WS header
 Url example: "/sentinel/ldk_runtime/v1/vendors/37515/keys"
 "^" ensures that Url and Body are clearly separated. Both Url and Body are invalidated if the cutoff is moved.
+### Use JWT access token
+X-LDK-User-Id: user id for authorization. The header should be set when using Credentials access token.
+
+Authorization:  Credentials or Public access token from authorization server.
+
 ## Sample
 ```
 package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"os/user"
@@ -49,20 +55,64 @@ import (
 
 	"github.com/antihax/optional"
 	"github.com/denisbrodbeck/machineid"
+	"github.com/go-resty/resty/v2"
 	"github.com/jessevdk/go-flags"
 	"github.com/joho/godotenv"
 	api "github.com/thalesgroupsm/ldk-golang-licensing-restful-api"
 )
 
+type ResponseInfoT struct {
+	AccessToken      string `json:"access_token"`
+	ExpiresIn        int    `json:"expires_in"`
+	RefreshExpiresIn int    `json:"refresh_expires_in"`
+	TokenType        string `json:"token_type"`
+	Scope            string `json:"scope"`
+}
+
 type EnvCfg struct {
-   VendorId       string `env:"SNTL_VENDOR_ID"         description:"Vendor Id"        long:"vendor-id"`
-   ClientIdentity string `env:"SNTL_CLIENT_IDENTITY"   description:"Client Identity"  long:"client-identity"`
-   EndpointScheme string `env:"SNTL_ENDPOINT_SCHEME"   description:"Endpoint Scheme"  long:"endpoint-scheme"`
-   ServerAddr     string `env:"SNTL_SERVER_ADDR"   description:"Server Address"  long:"servver-address"`
-   ServerPort     string `env:"SNTL_SERVER_PORT"   description:"Server Port"  long:"server-port"`
+	VendorId       string `env:"SNTL_VENDOR_ID"         description:"Vendor Id"        long:"vendor-id"`
+	ClientIdentity string `env:"SNTL_CLIENT_IDENTITY"   description:"Client Identity"  long:"client-identity"`
+	EndpointScheme string `env:"SNTL_ENDPOINT_SCHEME"   description:"Endpoint Scheme"  long:"endpoint-scheme"`
+	ServerAddr     string `env:"SNTL_SERVER_ADDR"   description:"Server Address"  long:"servver-address"`
+	ServerPort     string `env:"SNTL_SERVER_PORT"   description:"Server Port"  long:"server-port"`
+	Proxy          string `env:"SNTL_PROXY"   description:"Proxy"  long:"proxy"`
+	ClientID       string `env:"SNTL_CLIENT_ID"   description:"Client ID"  long:"client-id"`
+	ClientSecret   string `env:"SNTL_CLIENT_SECRET"   description:"Client Secret"  long:"client-secret"`
+	AccessTokenUrl string `env:"SNTL_ACCESS_TOKEN_URL"   description:"Access Token Url"  long:"access-token-url"`
+	UserId         string `env:"SNTL_USER_ID"   description:"User ID"  long:"user-id"`
+	AuthType       int    `env:"SNTL_AUTH_TYPE"   description:"Auth Type"  long:"auth-type"`
 }
 
 var env EnvCfg
+
+func getAccessToken() (access_token string) {
+	var respInfo ResponseInfoT
+
+	clientResty := resty.New()
+
+	resp, err := clientResty.R().
+		SetHeader("Content-Type", "application/x-www-form-urlencoded").
+		SetFormData(map[string]string{
+			"grant_type":    "client_credentials",
+			"client_id":     env.ClientID,
+			"client_secret": env.ClientSecret,
+		}).
+		Post(env.AccessTokenUrl)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if resp.StatusCode() > 300 {
+		log.Fatal(resp.Status())
+	}
+
+	if err = json.Unmarshal(resp.Body(), &respInfo); err != nil {
+		log.Fatal(err)
+	}
+
+	return respInfo.AccessToken
+}
 
 func main() {
 
@@ -70,23 +120,32 @@ func main() {
 	godotenv.Load()
 	flags.Parse(&env)
 
-	// parse the client identity
-	clientIdResult := strings.Split(env.ClientIdentity, ":")
-	if clientIdResult == nil || len(clientIdResult) != 2 {
-		log.Fatal("Client Identity is not valid")
-		return
+	var authCtx context.Context
+	if env.AuthType == 0 {
+		// use client identity
+		clientIdResult := strings.Split(env.ClientIdentity, ":")
+		if clientIdResult == nil || len(clientIdResult) != 2 {
+			log.Fatal("Client Identity is not valid")
+			return
+		}
+		authCtx = context.WithValue(context.Background(), api.ContextIdentity, api.IdentityAuth{
+			Id:     clientIdResult[0],
+			Secret: clientIdResult[1],
+		})
+	} else {
+		// use access token
+		authCtx = context.WithValue(context.Background(), api.ContextAccessToken, api.AccessTokenAuth{
+			UserId:      env.UserId,
+			AccessToken: getAccessToken(),
+		})
 	}
-
-	authCtx := context.WithValue(context.Background(), api.ContextIdentity, api.IdentityAuth{
-		Id:     clientIdResult[0],
-		Secret: clientIdResult[1],
-	})
 
 	cfg := &api.Configuration{
 		Host:     env.ServerAddr,
 		VendorId: env.VendorId,
 		Scheme:   env.EndpointScheme,
 		BasePath: env.EndpointScheme + "://" + env.ServerAddr + ":" + env.ServerPort + "/sentinel/ldk_runtime/v1",
+		Proxy:    env.Proxy,
 	}
 
 	licensingApiClient := api.NewAPIClient(cfg)
@@ -102,12 +161,14 @@ func main() {
 	licenseRequest.ClientInfo = &api.ClientInfo{}
 	licenseRequest.ClientInfo.MachineId, _ = machineid.ID()
 	licenseRequest.ClientInfo.UserName = user.Username
-	licenseRequest.ClientInfo.DomainName, _ = os.Hostname()
+	licenseRequest.ClientInfo.HostName, _ = os.Hostname()
+	licenseRequest.ClientInfo.DomainName = "test"
 	licenseRequest.ClientInfo.ProcessId = strconv.Itoa(os.Getpid())
 	licenseRequest.ClientInfo.ClientDateTime = time.Now().UTC().Format(time.RFC3339)
 
 	apiResponse, _, err := licensingApiClient.LicenseApi.Login(authCtx, licenseRequest)
 	if err != nil {
+		log.Printf("error %#v", apiResponse)
 		log.Fatal(err)
 		return
 	}
@@ -152,4 +213,5 @@ func main() {
 	}
 	log.Println("licensingApi.LicenseApi.Logout", apiResponse.SessionId)
 }
+
 ```
