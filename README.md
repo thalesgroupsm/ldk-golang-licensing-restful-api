@@ -1,3 +1,5 @@
+# Golang Wrapper for the LDK Licensing RESTFUL API
+This readme file describes how to work with the Golang wrapper for the LDK Licensing RESTFUL API.
 ## API Endpoints
 
 All URIs are relative to *https://localhost:8088/sentinel/ldk_runtime/v1*
@@ -17,22 +19,21 @@ Whether this header is required depends on the 'Allow Access from Remote Clients
 
 When applying a web service signature, the expected header is similar to the following:
 ### Use identity
+```
 X-LDK-Identity-WS: V1, Identity=KZMSEU3, RequestDate=2015-08-30T12:36:00Z, Signature=98cd2651598ac9460e8a336912d8bf683c4690d6043ca8a51680143cde080f3c
-
-where
-
+```
 V1 is a fixed string defining the version
 Identity defines the identity code
 RequestDate is formatted as YYYY-MM-DDTHH:MM:SSZ (20 characters)
 The signature is computed as follows:
-
+```
 IdentitySecret = 16 bytes secret from the identity
 DerivedKey = HMAC-SHA256(IdentitySecret, "X-LDK-Identity-WS-V1") (32 bytes)
 Signature = HMAC-SHA256 (DerivedKey, Identity + RequestDate + Url + "^" + Body) (32 bytes)
-where
-
+```
 Identity and RequestDate are the exact bytes that are passed in the X-LDK-Identity-WS header
-Url example: "/sentinel/ldk_runtime/v1/vendors/37515/keys"
+Url example: "/sentinel/ldk_runtime/v1/vendors/37515/keys".
+
 "^" ensures that Url and Body are clearly separated. Both Url and Body are invalidated if the cutoff is moved.
 ### Use JWT access token
 X-LDK-User-Id: user id for authorization. The header should be set when using Credentials access token.
