@@ -18,6 +18,14 @@ import (
 	api "github.com/thalesgroupsm/ldk-golang-licensing-restful-api"
 )
 
+type ResponseInfoT struct {
+	AccessToken      string `json:"access_token"`
+	ExpiresIn        int    `json:"expires_in"`
+	RefreshExpiresIn int    `json:"refresh_expires_in"`
+	TokenType        string `json:"token_type"`
+	Scope            string `json:"scope"`
+}
+
 type EnvCfg struct {
 	VendorId       string `env:"SNTL_VENDOR_ID"         description:"Vendor Id"        long:"vendor-id"`
 	ClientIdentity string `env:"SNTL_CLIENT_IDENTITY"   description:"Client Identity"  long:"client-identity"`
@@ -124,11 +132,23 @@ func main() {
 		return
 	}
 	log.Printf("licensingApi.LicenseApi.Login %#v", apiResponse)
-	
+
 	localVarOptionals := &api.QueryInfoOpts{
 		PageStartIndex: optional.NewInt32(0),
 		PageSize:       optional.NewInt32(1),
 	}
+
+	var readInfo api.ReadInfo
+	readInfo.Length = 10
+	readInfo.Offset = 0
+	readInfo.MemoryID = 65524
+	memoryInfo, _, err := licensingApiClient.LicenseApi.Read(authCtx, apiResponse.SessionId, readInfo)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	log.Printf("Read memory: %#v", memoryInfo)
+
 	keys, _, err := licensingApiClient.LicenseApi.GetKeyInfo(authCtx, localVarOptionals)
 	if err != nil {
 		log.Fatal(err)
