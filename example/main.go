@@ -133,11 +133,6 @@ func main() {
 	}
 	log.Printf("licensingApi.LicenseApi.Login %#v", apiResponse)
 
-	localVarOptionals := &api.QueryInfoOpts{
-		PageStartIndex: optional.NewInt32(0),
-		PageSize:       optional.NewInt32(1),
-	}
-
 	var readInfo api.ReadInfo
 	readInfo.Length = 10
 	readInfo.Offset = 0
@@ -149,6 +144,10 @@ func main() {
 	}
 	log.Printf("Read memory: %#v", memoryInfo)
 
+	localVarOptionals := &api.QueryInfoOpts{
+		PageStartIndex: optional.NewInt32(0),
+		PageSize:       optional.NewInt32(1),
+	}
 	keys, _, err := licensingApiClient.LicenseApi.GetKeyInfo(authCtx, localVarOptionals)
 	if err != nil {
 		log.Fatal(err)

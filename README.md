@@ -177,6 +177,17 @@ func main() {
 	}
 	log.Printf("licensingApi.LicenseApi.Login %#v", apiResponse)
 
+	var readInfo api.ReadInfo
+	readInfo.Length = 10
+	readInfo.Offset = 0
+	readInfo.MemoryID = 65524
+	memoryInfo, _, err := licensingApiClient.LicenseApi.Read(authCtx, apiResponse.SessionId, readInfo)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	log.Printf("Read memory: %#v", memoryInfo)
+	
 	localVarOptionals := &api.QueryInfoOpts{
 		PageStartIndex: optional.NewInt32(0),
 		PageSize:       optional.NewInt32(1),
