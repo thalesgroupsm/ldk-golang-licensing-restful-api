@@ -12,7 +12,7 @@ Class | Method | HTTP request | Description
 *LicenseApi* | [**Login**] | **Post** /vendors/{vendorId}/sessions | login
 *LicenseApi* | [**Logout**] | **Delete** /vendors/{vendorId}/sessions/{sessionId} | logout
 *LicenseApi* | [**Refresh**] | **Post** /vendors/{vendorId}/sessions/{sessionId}/refresh | refresh
-*LicenseApi* | [**GetKeyInfo**] | **Get** /vendors/{vendorId}/sessions/{sessionId}/read | read
+*LicenseApi* | [**ReadMemory**] | **Get** /vendors/{vendorId}/sessions/{sessionId}/read | readMemory
 
 
 ## Authorization
