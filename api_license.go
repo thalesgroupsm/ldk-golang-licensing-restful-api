@@ -791,7 +791,7 @@ func (a *LicenseApiService) Read(ctx context.Context, sessionId string, readInfo
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
-	localVarQueryParams.Add("memoryId", fmt.Sprintf("%d", readInfo.MemoryID))
+	localVarQueryParams.Add("memoryId", fmt.Sprintf("%d", readInfo.MemoryId))
 	localVarQueryParams.Add("offset", fmt.Sprintf("%d", readInfo.Offset))
 	localVarQueryParams.Add("length", fmt.Sprintf("%d", readInfo.Length))
 
