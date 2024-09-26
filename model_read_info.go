@@ -7,7 +7,7 @@
 package ldklicensingretfulapi
 
 type ReadInfo struct {
-	MemoryID int32 `json:"memoryId"`
+	MemoryId int32 `json:"memoryId"`
 	Offset   int32 `json:"offset"`
 	Length   int32 `json:"length"`
 }

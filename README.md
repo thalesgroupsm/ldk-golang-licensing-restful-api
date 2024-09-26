@@ -12,6 +12,7 @@ Class | Method | HTTP request | Description
 *LicenseApi* | [**Login**] | **Post** /vendors/{vendorId}/sessions | login
 *LicenseApi* | [**Logout**] | **Delete** /vendors/{vendorId}/sessions/{sessionId} | logout
 *LicenseApi* | [**Refresh**] | **Post** /vendors/{vendorId}/sessions/{sessionId}/refresh | refresh
+*LicenseApi* | [**ReadMemory**] | **Get** /vendors/{vendorId}/sessions/{sessionId}/read | readMemory
 
 
 ## Authorization
@@ -180,14 +181,14 @@ func main() {
 	var readInfo api.ReadInfo
 	readInfo.Length = 10
 	readInfo.Offset = 0
-	readInfo.MemoryID = 65524
+	readInfo.MemoryId = 65524
 	memoryInfo, _, err := licensingApiClient.LicenseApi.Read(authCtx, apiResponse.SessionId, readInfo)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 	log.Printf("Read memory: %#v", memoryInfo)
-	
+
 	localVarOptionals := &api.QueryInfoOpts{
 		PageStartIndex: optional.NewInt32(0),
 		PageSize:       optional.NewInt32(1),

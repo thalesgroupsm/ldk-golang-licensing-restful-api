@@ -136,7 +136,7 @@ func main() {
 	var readInfo api.ReadInfo
 	readInfo.Length = 10
 	readInfo.Offset = 0
-	readInfo.MemoryID = 65524
+	readInfo.MemoryId = 65524
 	memoryInfo, _, err := licensingApiClient.LicenseApi.Read(authCtx, apiResponse.SessionId, readInfo)
 	if err != nil {
 		log.Fatal(err)
